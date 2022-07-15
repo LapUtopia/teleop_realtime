@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<launch>
+
+    <!-- Launch Realsense Camera -->
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+        <arg name="filters" value="pointcloud"/>
+        <arg name="align_depth" value="true"/>
+    </include>
+
+    <!-- RViz -->
+    <node pkg="rviz" type="rviz" output="screen" name="rviz"/>
+
+</launch>

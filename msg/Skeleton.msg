@@ -1,0 +1,1 @@
+geometry_msgs/Point[] body_parts
