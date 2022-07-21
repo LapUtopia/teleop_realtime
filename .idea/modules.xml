@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../../vico_ws/src/open-vico/.idea/open-vico.iml" filepath="$PROJECT_DIR$/../../../vico_ws/src/open-vico/.idea/open-vico.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/teleop_realtime.iml" filepath="$PROJECT_DIR$/.idea/teleop_realtime.iml" />
     </modules>
   </component>

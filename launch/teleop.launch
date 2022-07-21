@@ -1,13 +1,119 @@
 <?xml version="1.0" ?>
 <launch>
 
-    <!-- Launch Realsense Camera -->
-    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-        <arg name="filters" value="pointcloud"/>
-        <arg name="align_depth" value="true"/>
+    <!-- Gazebo parameters -->
+    <arg name="launch_gazebo" default="true"/>
+    <arg name="gazebo_world" default="worlds/empty.world"/>
+    <arg name="gazebo_paused" default="false"/>
+    <arg name="gazebo_headless" default="false"/>
+
+    <!-- Robot parameters -->
+    <arg name="robot_init_x" default="0"/>
+    <arg name="robot_init_y" default="1.0"/>
+    <arg name="robot_init_z" default="1.0"/>
+    <arg name="robot_init_roll" default="0"/>
+    <arg name="robot_init_pitch" default="0"/>
+    <arg name="robot_init_yaw" default="0"/>
+
+    <!-- Camera parameters -->
+    <arg name="camera_x_init_pose" default="2.0" />
+    <arg name="camera_y_init_pose" default="-1.0" />
+    <arg name="camera_z_init_pose" default="1.0" />
+    <arg name="camera_roll_init_pose" default="0" />
+    <arg name="camera_pitch_init_pose" default="0" />
+    <arg name="camera_yaw_init_pose" default="3.14" />
+
+    <!-- Teleoperation frames -->
+    <arg name="robot_reference_frame" default="panda_link0"/>
+    <arg name="robot_end_effector_frame" default="panda_EE"/>
+    <arg name="camera_optical_frame" default="camera_color_optical_frame"/>
+    <arg name="world_frame" default="world"/>
+    <arg name="camera_frame" default="camera_link"/>
+
+    <!-- Openpose parameters -->
+    <arg name="res" default="352" />
+    <arg name="headless_display_arg" value="--display 1"/>
+    <arg name="print" default="false" />
+    <arg name="frame_id" default="camera_color_optical_frame" />
+    <arg name="no_depth" default="false" />
+    <arg name="skeleton" default="true" />
+    <arg name="pub_topic" default="/frame" />
+    <arg name="color_topic" default="/realsense_camera/camera/color/image_raw" />
+    <arg name="depth_topic" default="/realsense_camera/camera/aligned_depth_to_color/image_raw" />
+    <arg name="id_text_size" default="0.2" />
+    <arg name="openpose_args" default="--model_folder $(env HOME)/github/openpose/models/ --number_people_max 1
+        --net_resolution -1x$(arg res) $(arg headless_display_arg)" />
+    <arg name="cam_info_topic" default="/realsense_camera/camera/color/camera_info" />
+    <arg name="id_text_offset" default="-0.05" />
+    <arg name="skeleton_hands" default="false" />
+    <arg name="skeleton_line_width" default="0.01" />
+    <arg name="synchronous" default="true" />
+    <arg name="py_openpose_path" default="/home/ygone/github/openpose/build/python" />
+
+
+    <group ns="realsense_camera">
+        <!-- Launch Realsense Camera -->
+        <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+            <arg name="filters" value="pointcloud"/>
+            <arg name="align_depth" value="true"/>
+        </include>
+
+        <!-- Publish static tf between world frame and camera frame -->
+        <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
+                                    args="$(arg camera_x_init_pose) $(arg camera_y_init_pose) $(arg camera_z_init_pose)
+                                            $(arg camera_yaw_init_pose) $(arg camera_pitch_init_pose) $(arg camera_roll_init_pose) $(arg world_frame) $(arg camera_frame)" />
+
+    </group>
+
+    <!-- Spawn Franka -->
+    <include file="$(find teleop_realtime)/launch/spawn_franka.launch">
+        <arg name="gazebo" value="$(arg launch_gazebo)"/>
+        <arg name="world" value="$(arg gazebo_world)"/>
+        <arg name="paused" value="$(arg gazebo_paused)"/>
+        <arg name="headless" value="$(arg gazebo_headless)"/>
+        <arg name="x" value="$(arg robot_init_x)"/>
+        <arg name="y" value="$(arg robot_init_y)"/>
+        <arg name="z" value="$(arg robot_init_z)"/>
+        <arg name="roll" value="$(arg robot_init_roll)"/>
+        <arg name="pitch" value="$(arg robot_init_pitch)"/>
+        <arg name="yaw" value="$(arg robot_init_yaw)"/>
     </include>
 
-    <!-- RViz -->
-    <node pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(find open_vico_examples)/rviz/realtime_teleop.rviz"/>
+<!--      --><!-- OpenPose -->
+<!--     <include file="$(find ros_openpose)/launch/core.launch" > -->
+<!--         <arg name="print" value="$(arg print)" /> -->
+<!--         <arg name="no_depth" value="$(arg no_depth)" /> -->
+<!--         <arg name="skeleton" value="$(arg skeleton)" /> -->
+<!--         <arg name="frame_id" value="$(arg frame_id)" /> -->
+<!--         <arg name="pub_topic" value="$(arg pub_topic)" /> -->
+<!--         <arg name="color_topic" value="$(arg color_topic)" /> -->
+<!--         <arg name="depth_topic" value="$(arg depth_topic)" /> -->
+<!--         <arg name="id_text_size" value="$(arg id_text_size)" /> -->
+<!--         <arg name="openpose_args" value="$(arg openpose_args)" /> -->
+<!--         <arg name="id_text_offset" value="$(arg id_text_offset)" /> -->
+<!--         <arg name="skeleton_hands" value="$(arg skeleton_hands)" /> -->
+<!--         <arg name="cam_info_topic" value="$(arg cam_info_topic)" /> -->
+<!--         <arg name="skeleton_line_width" value="$(arg skeleton_line_width)" /> -->
+<!--         <arg name="synchronous" value="$(arg synchronous)" /> -->
+<!--         <arg name="py_openpose_path" value="$(arg py_openpose_path)" /> -->
+<!--     </include> -->
+
+<!--      --><!-- Ros openpose msg -> open vico message -->
+<!--     <node pkg="open_vico_msgs" type="ros_openpose_to_open_vico_msg.py" name="ros_openpose_to_open_vico_msg" output="screen" args=""> -->
+<!--         <remap from="skeletons" to="skeleton_tracking_teleop/skeletons"/> -->
+<!--         <remap from="openpose_frames" to="frame"/> -->
+<!--     </node> -->
+
+<!--      --><!-- Openpose teleoperation node -->
+<!--     <node pkg="open_vico_examples" type="skeleton_tracking_teleop" name="skeleton_tracking_teleop" output="screen" args=""> -->
+<!--         <remap from="skeleton_tracking_teleop/desired_pose" to="/cartesian_impedance_example_controller/equilibrium_pose"/> -->
+<!--         <param name="robot_reference_frame" value="$(arg robot_reference_frame)"/> -->
+<!--         <param name="robot_end_effector_frame" value="$(arg robot_end_effector_frame)"/> -->
+<!--         <param name="camera_frame" value="$(arg camera_optical_frame)"/> -->
+<!--     </node> -->
+
+
+<!--      --><!-- RViz -->
+<!--     <node pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(find open_vico_examples)/rviz/realtime_teleop.rviz"/> -->
 
 </launch>
